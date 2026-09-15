@@ -17,6 +17,10 @@ await page.reload({ waitUntil: 'networkidle' });
 check(await page.locator('.flow-node').count() === 6, 'six route nodes render');
 await page.locator('[data-node="2"]').click();
 check((await page.locator('#detailBody h3').textContent()).includes('低位确认'), 'low-point node opens');
+await page.locator('.state').first().selectOption('pass');
+check((await page.locator('[data-node="2"] .node-state').textContent()).includes('部分通过'), 'node state reflects partial leaf edit');
+await page.locator('.state').evaluateAll(selects => selects.forEach(select => { select.value = 'pass'; select.dispatchEvent(new Event('change', { bubbles: true })); }));
+check((await page.locator('[data-node="2"] .node-state').textContent()).includes('已通过'), 'node state reflects all leaf edits');
 check(await page.locator('#recordLowBtn').count() === 1, 'low-point record action exists');
 await page.locator('#recordLowBtn').click();
 check((await page.locator('#executionLog').textContent()).includes('低点'), 'low-point event is logged');
@@ -42,6 +46,8 @@ check((await page.locator('#versionList').textContent()).includes('v0.2'), 'new 
 await page.reload({ waitUntil: 'networkidle' });
 check((await page.locator('#executionLog').textContent()).includes('卖出成交'), 'execution log persists after reload');
 check((await page.locator('#versionList').textContent()).includes('v0.2'), 'version persists after reload');
+await page.locator('[data-node="2"]').click();
+check((await page.locator('[data-node="2"] .node-state').textContent()).includes('已通过'), 'node state persists after reload');
 
 await browser.close();
 if (failures.length) { console.error(failures.map(message => `FAIL ${message}`).join('\n')); process.exit(1); }
