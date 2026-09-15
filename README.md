@@ -27,4 +27,13 @@ flowchart LR
 python3 -m http.server 4173
 ```
 
-目标盈利率默认为 10%，可在右下角编辑。当前版本只记录判断，不连接行情或交易账户。
+目标盈利率默认为 10%，可在右下角编辑。初版支持完整的本地闭环：记录低点、记录分批成交、达到目标后生成挂卖单、标记卖出成交、查看执行日志和创建规则版本。所有状态保存在当前浏览器的 `localStorage` 中，不连接行情或交易账户。
+
+公网演示：<https://krismurdock.github.io/stock-route-system/>
+
+端到端检查：
+
+```bash
+python3 -m http.server 4173
+BASE_URL=http://127.0.0.1:4173 node tests/e2e.mjs
+```
