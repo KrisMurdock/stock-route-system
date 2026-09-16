@@ -1,0 +1,10 @@
+{
+  "name": "stock-route-system",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test --experimental-test-coverage --test-coverage-include=risk-plan.js tests/risk-plan.test.cjs",
+    "test:e2e": "node tests/e2e.mjs && node tests/risk-plan.e2e.cjs"
+  },
+  "devDependencies": { "playwright": "1.63.0" }
+}

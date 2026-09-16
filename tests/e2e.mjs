@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require(process.env.PLAYWRIGHT_PATH || '/Users/krisfu/Desktop/projects/deep_stock_analysis/node_modules/playwright');
+const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173';
 const browser = await chromium.launch({ headless: true });
@@ -17,6 +17,17 @@ await page.reload({ waitUntil: 'networkidle' });
 check(await page.locator('.flow-node').count() === 6, 'six route nodes render');
 await page.locator('[data-node="2"]').click();
 check((await page.locator('#detailBody h3').textContent()).includes('低位确认'), 'low-point node opens');
+await page.locator('#riskMarket').selectOption('A');
+for (const [id, value] of Object.entries({ riskEntry:'100', riskStop:'95', riskTarget:'110', riskCost:'0', riskMinimum:'2' })) {
+  await page.locator('#'+id).fill(value);
+  await page.locator('#'+id).press('Tab');
+}
+await page.locator('#marketChecked').check();
+for (const index of [0,1,4]) {
+  await page.locator('[data-node="'+index+'"]').click();
+  for (const select of await page.locator('.state').all()) await select.selectOption('pass');
+}
+await page.locator('[data-node="2"]').click();
 await page.locator('.state').first().selectOption('pass');
 check((await page.locator('[data-node="2"] .node-state').textContent()).includes('部分通过'), 'node state reflects partial leaf edit');
 await page.locator('.state').evaluateAll(selects => selects.forEach(select => { select.value = 'pass'; select.dispatchEvent(new Event('change', { bubbles: true })); }));

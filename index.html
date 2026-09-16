@@ -34,13 +34,16 @@
     .btn:hover { border-color:#46718b; background:#15314a; }
     .btn-primary { color:#05121f; background:var(--cyan); border-color:var(--cyan); font-weight:650; }
     .btn-primary:hover { background:#72e6d8; }
-    .layout { display:grid; grid-template-columns:minmax(580px, 1fr) 355px; gap:20px; align-items:start; }
+    .layout { display:grid; grid-template-columns:minmax(0, 1fr) 355px; grid-template-areas:'route detail' 'watch detail'; grid-template-rows:auto 1fr; gap:20px; align-items:start; }
+    .layout > .panel:first-child { grid-area:route; }
+    .layout > .detail { grid-area:detail; }
+    .layout > .watch { grid-area:watch; }
     .panel { background:rgba(13,27,45,.9); border:1px solid var(--line); border-radius:13px; box-shadow:var(--shadow); }
     .panel-head { display:flex; justify-content:space-between; align-items:center; padding:17px 19px; border-bottom:1px solid var(--line); }
     .panel-head h2 { font-size:14px; margin:0; font-weight:650; }
     .panel-head span { color:var(--muted); font-size:11px; }
     .flow-wrap { padding:25px 24px 20px; }
-    .flow { display:grid; grid-template-columns:repeat(11, minmax(48px, 1fr)); gap:8px; align-items:center; min-height:206px; }
+    .flow { display:grid; grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) 12px minmax(0,1fr) 12px minmax(0,1fr) 12px minmax(0,1fr) 12px minmax(0,1fr); gap:4px; align-items:center; min-height:206px; }
     .flow-node { position:relative; min-height:112px; padding:15px 12px 12px; border:1px solid var(--line); border-radius:11px; background:#0c1d30; transition:.18s ease; cursor:pointer; text-align:left; width:100%; }
     .flow-node:hover { transform:translateY(-2px); border-color:#4b7992; }
     .flow-node.selected { border-color:var(--cyan); background:linear-gradient(145deg,#103245,#0c1d30); box-shadow:0 0 0 1px rgba(84,214,199,.12), 0 8px 25px rgba(20,126,132,.16); }
@@ -88,7 +91,19 @@
     .version-form label { color:var(--muted); font-size:11px; }
     .version-form textarea { width:100%; border:1px solid var(--line); border-radius:7px; background:#091a2c; padding:9px 10px; outline:none; }
     .version-form textarea:focus { border-color:var(--cyan); box-shadow:0 0 0 2px #54d6c722; }
-    @media (max-width:1050px) { .app { grid-template-columns:70px minmax(0,1fr); } aside { padding:20px 10px; }.brand { padding:0 10px 30px; }.brand-copy,.nav-label,.nav-item span:not(.nav-icon),.version { display:none; }.nav-item { justify-content:center; padding:12px; }.layout { grid-template-columns:minmax(0,1fr); }.detail { order:-1; }.bottom { grid-template-columns:minmax(0,1fr); } }
+    .risk-editor { margin:18px 0; padding-top:16px; border-top:1px solid var(--line); }
+    .risk-editor h4 { margin:0; font-size:14px; }
+    .risk-editor p { color:var(--muted); font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+    .risk-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .risk-editor input, .risk-editor select { min-width:0; min-height:44px; }
+    .risk-editor .field label { font-size:12px; }
+    .risk-check { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .risk-check input { flex:0 0 20px; }
+    #riskResult { display:block; margin-top:15px; line-height:1.7; font-size:13px; }
+    .risk-editor .btn { margin-top:12px; white-space:normal; }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+    @media (max-width:1250px) { .layout { grid-template-columns:minmax(0,1fr); grid-template-areas:'route' 'detail' 'watch'; grid-template-rows:auto; } }
+    @media (max-width:1050px) { .app { grid-template-columns:70px minmax(0,1fr); } aside { padding:20px 10px; }.brand { padding:0 10px 30px; }.brand-copy,.nav-label,.nav-item span:not(.nav-icon),.version { display:none; }.nav-item { justify-content:center; padding:12px; }.layout { grid-template-columns:minmax(0,1fr); }.bottom, .workflow-grid { grid-template-columns:minmax(0,1fr); } }
     @media (max-width:720px) { main { padding:22px 16px 35px; }.topbar { display:block; }.top-actions { margin-top:15px; }.flow-wrap { overflow-x:auto; }.flow { min-width:930px; }.principle-body { grid-template-columns:repeat(2,1fr); }.bottom { gap:14px; } }
   </style>
 </head>
@@ -108,7 +123,7 @@
     </aside>
     <main>
       <div class="topbar">
-        <div><h1>交易路线总览</h1><p class="subtitle">把“选好股 → 分批打入 → 达标卖出”变成可执行的检查路径。</p></div>
+        <div><h1>交易路线总览</h1><p class="subtitle">A 股 + 港股通 · 盈亏比优先 · 选龙头 → 确认低位与盈亏比 → 分批打入 → 按计划退出。</p></div>
         <div class="top-actions"><span class="badge"><i class="dot"></i>纪律模式已开启</span><button class="btn btn-primary" id="saveBtn">保存本次判断</button></div>
       </div>
       <div class="layout">
@@ -120,7 +135,7 @@
               <div class="connector"></div>
               <button type="button" class="flow-node" data-node="1" aria-label="选择节点：选好股找龙头"><div class="node-num">02</div><div class="node-icon">✦</div><div class="node-title">选好股<br>找龙头</div><div class="node-state">待定义</div></button>
               <div class="connector"></div>
-              <button type="button" class="flow-node" data-node="2" aria-label="选择节点：低位确认"><div class="node-num">03</div><div class="node-icon">⌁</div><div class="node-title">低位确认</div><div class="node-state">待确认</div></button>
+              <button type="button" class="flow-node" data-node="2" aria-label="选择节点：低位确认与盈亏比"><div class="node-num">03</div><div class="node-icon">⌁</div><div class="node-title">低位确认<br>盈亏比评估</div><div class="node-state">待确认</div></button>
               <div class="connector"></div>
               <button type="button" class="flow-node" data-node="3" aria-label="选择节点：分批打入"><div class="node-num">04</div><div class="node-icon">▦</div><div class="node-title">分批打入</div><div class="node-state">未开始</div></button>
               <div class="connector"></div>
@@ -129,7 +144,7 @@
               <button type="button" class="flow-node" data-node="5" aria-label="选择节点：目标卖出"><div class="node-num">06</div><div class="node-icon">↗</div><div class="node-title">目标卖出</div><div class="node-state">目标 10%</div></button>
             </div>
             <div class="branch-row"><div class="branch good"><strong>✓ 通过</strong><span>进入下一节点，保留证据和规则版本。</span></div><div class="branch warn"><strong>◌ 待确认</strong><span>继续观察，不生成买入动作。</span></div><div class="branch bad"><strong>× 失效</strong><span>退出优先，记录偏差后复盘。</span></div></div>
-            <div class="flow-note"><b>循环规则</b><span>每确认一个新的低点，才允许触发下一笔；补仓后回到“持仓管理”重新检查。</span></div>
+            <div class="flow-note"><b>循环规则</b><span>每笔先评估盈亏比，再确认新低点；止盈或逻辑失效则退出。持仓时长用于复盘，不预设固定期限。</span></div>
           </div>
         </section>
         <section class="panel detail"><div class="panel-head"><h2>节点检查</h2><span id="ruleCount">2 条叶子规则</span></div><div class="detail-body" id="detailBody"></div><div class="detail-foot"><span class="saved">状态变更自动记录到 <b>路线 v0.1</b></span><button class="btn" id="nextBtn">下一节点 →</button></div></section>
@@ -140,54 +155,137 @@
     </main>
   </div>
   <div class="toast" id="toast">已保存：当前判断已写入路线 v0.1</div>
+  <script src="risk-plan.js"></script>
+  <script src="risk-editor.js"></script>
   <script>
     const nodes = [
-      {icon:'◒', title:'交易前提', desc:'先确认这笔交易允许被执行。未定义的参数只能记录，不能转化为买入动作。', rules:[['市场与周期已定义','明确市场制度、持仓周期和本次观察范围。','pending'],['风险预算已锁定','可用现金、计划投入、保留现金均有记录。','pending']]},
-      {icon:'✦', title:'选好股 / 找龙头', desc:'“龙头”是比较结果，不是自我感觉。每次判断都绑定范围、日期和证据。', rules:[['比较范围已定义','已写明行业、板块或候选池，以及比较日期。','pending'],['强度与逻辑仍有效','相对强度、成交与基本逻辑没有触发失效。','pending'],['失去龙头地位？','若地位变化，回到持仓管理重新评估。','pass']]},
-      {icon:'⌁', title:'低位确认', desc:'只有确认一个新的低点，才允许进入下一笔。便宜本身不是触发条件。', rules:[['低位口径已选择','区间低 / 回撤低 / 企稳低，至少选择一种口径。','pending'],['低点有证据','记录价格、日期、观察周期和确认依据。','pending'],['是否仍在下跌？','持续下跌时保持观察，不自动摊平。','pass']]},
+      {icon:'◒', title:'交易前提', desc:'适用 A 股与港股通。先确认市场边界和风险预算；持仓期限由逻辑、目标及失效条件决定。', rules:[['市场边界已核验','A 股核验可卖日与涨跌停；港股通核验可买资格、交易日、每手及结算汇率。','pending'],['风险预算已锁定','可用现金、计划投入、保留现金和最大可接受损失均有记录。','pending']]},
+      {icon:'✦', title:'选好股 / 找龙头', desc:'“龙头”是比较结果，不是自我感觉。每次判断都绑定范围、日期和证据。', rules:[['比较范围已定义','已写明行业、板块或候选池，以及比较日期。','pending'],['强度与逻辑仍有效','相对强度、成交与基本逻辑没有触发失效。','pending'],['龙头地位仍成立','若地位变化，回到持仓管理重新评估。','pending']]},
+      {icon:'⌁', title:'低位确认 / 盈亏比', desc:'先写入场、失效、目标和费用，再看盈亏比是否达标；确认一个新低点才能进入下一笔。', rules:[['低位口径已选择','区间低 / 回撤低 / 企稳低，至少选择一种口径。','pending'],['低点有证据','记录价格、日期、观察周期和确认依据。','pending'],['止跌条件已核验','持续下跌时保持观察，不自动摊平。','pending']]},
       {icon:'▦', title:'分批打入', desc:'把计划拆成多笔，每笔成交后才改变持仓状态；挂单不等于已买入。', rules:[['本笔属于计划内','笔次、金额和剩余预算均已预先记录。','pass'],['新低点已确认','每次补入都必须绑定一个新的低点证据。','pending'],['补仓次数未超限','达到次数或总仓位上限后，停止补仓。','pending']]},
-      {icon:'◔', title:'持仓管理', desc:'持仓阶段每次只走一个优先级：先退出检查，再看补仓，最后继续观察。', rules:[['退出条件未触发','逻辑失效、风险超限时，退出优先。','pass'],['补仓条件同时成立','现金、低点、逻辑和风险预算全部通过。','pending'],['卖单是否成交？','部分成交或未成交时，剩余仓位继续管理。','pending']]},
-      {icon:'↗', title:'目标卖出', desc:'达到目标盈利率即生成限价卖单；成交状态单独记录。', rules:[['达到目标盈利率','当前收益 ≥ 目标值时，进入挂单卖出。','pending'],['挂单状态可追踪','未成交 / 部分成交 / 全部成交分别记录。','pending'],['退出受阻有分支','跳空、跌停、停牌等情况转入风险记录。','pending']]}
+      {icon:'◔', title:'持仓管理', desc:'持仓阶段每次只走一个优先级：先退出检查，再看补仓，最后继续观察。', rules:[['退出条件未触发','逻辑失效、风险超限时，退出优先。','pending'],['本笔投入条件成立','现金、低点、逻辑和整仓风险预算全部通过。','pending'],['没有待处理退出','部分成交或未成交时，暂停买入，管理剩余仓位。','pending']]},
+      {icon:'↗', title:'目标卖出', desc:'10% 是初始目标模板。按当前候选的目标价退出；挂单和成交分开记录。', rules:[['达到计划目标','以已保存的目标价对应涨幅判断；失效退出应优先处理。','pending'],['挂单状态可追踪','未成交 / 部分成交 / 全部成交分别记录。','pending'],['退出受阻有分支','跳空、跌停、停牌等情况转入风险记录，计划损失不保证实际成交。','pending']]}
     ];
     let selected = 0;
     const STORAGE_KEY = 'stock-route-v01';
     const DEFAULT_STATE = { target:10, lowPoints:4, reviewCount:2, selectedStock:'star', logs:[], versions:[{version:'v0.1', note:'初始框架', at:'基础路线已建立'}], stocks:{star:{batchCount:2,maxBatches:4,order:'none'},far:{batchCount:0,maxBatches:4,order:'none'},energy:{batchCount:4,maxBatches:4,order:'filled'}}, statuses:nodes.map(n=>n.rules.map(r=>r[2])) };
     let appState = structuredClone(DEFAULT_STATE);
     const detailBody = document.getElementById('detailBody');
+    const escapeText = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const currentStock = () => appState.stocks[appState.selectedStock];
+    const currentPlan = () => currentStock()?.riskPlan || {};
+    const planResult = () => RiskPlan.evaluatePlan(currentPlan());
+    function setStock(delta) {
+      appState = {...appState, stocks:{...appState.stocks, [appState.selectedStock]:{...currentStock(), ...delta}}};
+    }
+    function currentStockName() {
+      return document.querySelector('[data-stock="'+CSS.escape(appState.selectedStock)+'"] .stock-name')?.textContent.trim() || '当前候选';
+    }
     const cloneDefault = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
     const formatTime = value => new Intl.DateTimeFormat('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value));
     const toast = message => { const t=document.getElementById('toast'); t.textContent=message; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); };
-    function saveState(){ appState.statuses=nodes.map(n=>n.rules.map(r=>r[2])); localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); renderLogs(); renderVersions(); updateMetrics(); }
-    function addLog(message, detail=''){ appState.logs.unshift({message,detail,at:new Date().toISOString()}); saveState(); }
-    function renderLogs(){ const log=document.getElementById('executionLog'); if(!appState.logs.length){ log.innerHTML='<div class="empty">还没有执行记录。先在流程节点中确认一个低点。</div>'; return; } log.innerHTML=appState.logs.slice(0,30).map(item=>'<div class="log-item"><strong>'+item.message+'</strong>'+(item.detail?'<div>'+item.detail+'</div>':'')+'<time>'+formatTime(item.at)+'</time></div>').join(''); }
-    function renderVersions(){ const list=document.getElementById('versionList'); list.innerHTML=appState.versions.map(item=>'<div class="version-item"><strong>'+item.version+' · '+item.note+'</strong><time>'+item.at+'</time></div>').join(''); document.getElementById('currentVersion').textContent='当前 '+appState.versions[0].version; document.querySelector('.version').textContent='路线 '+appState.versions[0].version+' · 可迭代'; document.querySelector('.panel-head h2').textContent='主路线 · '+appState.versions[0].version; }
+    function saveState(){
+      appState={...appState,statuses:nodes.map(n=>n.rules.map(r=>r[2]))};
+      setStock({statuses:appState.statuses});
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(appState)); renderLogs(); renderVersions(); updateMetrics();
+    }
+    function addLog(message, detail=''){
+      const entry={message,detail,at:new Date().toISOString(),stockId:appState.selectedStock,riskPlan:structuredClone(currentPlan()),version:appState.versions[0].version};
+      appState={...appState,logs:[entry,...appState.logs]}; saveState();
+    }
+    function renderLogs(){ const log=document.getElementById('executionLog'); if(!appState.logs.length){ log.innerHTML='<div class="empty">还没有执行记录。先在流程节点中确认一个低点。</div>'; return; } log.innerHTML=appState.logs.slice(0,30).map(item=>'<div class="log-item"><strong>'+escapeText(item.message)+'</strong>'+(item.detail?'<div>'+escapeText(item.detail)+'</div>':'')+'<time>'+escapeText(formatTime(item.at))+'</time></div>').join(''); }
+    function renderVersions(){ const list=document.getElementById('versionList'); list.innerHTML=appState.versions.map(item=>'<div class="version-item"><strong>'+escapeText(item.version)+' · '+escapeText(item.note)+'</strong><time>'+escapeText(item.at)+'</time></div>').join(''); document.getElementById('currentVersion').textContent='当前 '+appState.versions[0].version; document.querySelector('.version').textContent='路线 '+appState.versions[0].version+' · 可迭代'; document.querySelector('.panel-head h2').textContent='主路线 · '+appState.versions[0].version; }
     function updateMetrics(){ const candidateCount=Object.keys(appState.stocks).length; document.getElementById('candidateMetric').textContent=String(candidateCount).padStart(2,'0'); document.getElementById('lowPointMetric').textContent=String(appState.lowPoints).padStart(2,'0'); document.getElementById('reviewMetric').textContent=String(appState.reviewCount).padStart(2,'0'); }
     function restoreState(){ try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved) appState=Object.assign(cloneDefault(), saved, {stocks:Object.assign(cloneDefault().stocks,saved.stocks||{}),versions:Array.isArray(saved.versions)&&saved.versions.length?saved.versions:cloneDefault().versions,logs:Array.isArray(saved.logs)?saved.logs:[]}); if(Array.isArray(appState.statuses)) appState.statuses.forEach((statuses,ni)=>{ if(nodes[ni]&&Array.isArray(statuses)) statuses.forEach((status,ri)=>{ if(nodes[ni].rules[ri]&&['pending','pass','block'].includes(status)) nodes[ni].rules[ri][2]=status; }); }); let savedStocks=[]; try { savedStocks=JSON.parse(localStorage.getItem('stock-route-stocks')||'[]'); } catch(e) {} if(Array.isArray(savedStocks)) savedStocks.forEach(item=>{ const name=typeof item==='string'?item:item?.name; const id=typeof item==='string'?'candidate-'+name.replace(/[^a-z0-9]/gi,'').slice(0,12):item?.id; if(name&&id&&!document.querySelector('[data-stock="'+CSS.escape(id)+'"]')) { if(!appState.stocks[id]) appState.stocks[id]={batchCount:0,maxBatches:4,order:'none'}; appendCandidate(name,id); } }); } catch(e){ appState=cloneDefault(); localStorage.removeItem(STORAGE_KEY); } document.getElementById('targetInput').value=normalizeTarget(appState.target); document.querySelector('[data-node="5"] .node-state').textContent='目标 '+normalizeTarget(appState.target)+'%'; nodes.forEach((_,ni)=>{ const el=document.querySelector('.flow-node[data-node="'+ni+'"] .node-state'); const statuses=nodes[ni].rules.map(r=>r[2]); el.textContent=statuses.every(s=>s==='pass')?'已通过':statuses.some(s=>s==='block')?'不可执行':statuses.some(s=>s==='pass')?'部分通过':ni===5?'目标 '+appState.target+'%':'待确认'; el.className='node-state '+(el.textContent==='已通过'?'ok':''); }); const selectedStock=document.querySelector('[data-stock="'+CSS.escape(appState.selectedStock)+'"]'); if(selectedStock) selectedStock.classList.add('selected'); renderLogs(); renderVersions(); updateMetrics(); document.getElementById('candidateCount').textContent=document.querySelectorAll('.stock').length+' 个标的'; renderDetail(); }
     function renderDetail() {
       const n = nodes[selected];
       document.getElementById('ruleCount').textContent = n.rules.length + ' 条叶子规则';
-      const action = selected===2 ? '<div class="action-row"><button class="btn btn-primary" id="recordLowBtn">记录已确认低点</button></div>' : selected===3 ? '<div class="field"><label for="batchAmount">本笔计划金额</label><div class="field-row"><input id="batchAmount" type="number" min="1" placeholder="输入金额" /><span class="suffix">元</span></div></div><div class="action-row"><button class="btn btn-primary" id="recordBuyBtn">记录本笔成交</button></div>' : selected===5 ? '<div class="field"><label for="returnInput">本次实际收益率</label><div class="field-row"><input id="returnInput" type="number" placeholder="输入当前收益" step="0.1" /><span class="suffix">%</span></div></div><div class="action-row"><button class="btn btn-primary" id="createSellBtn">生成挂卖单</button><button class="btn" id="fillSellBtn">标记卖出成交</button></div>' : '';
+      const action = selected===2 ? '<div class="action-row"><button class="btn btn-primary" id="recordLowBtn">记录已确认低点</button></div>' : selected===3 ? '<div class="field"><label for="batchAmount">本笔计划金额（报价币种）</label><div class="field-row"><input id="batchAmount" type="number" min="1" placeholder="输入金额" /></div></div><div class="action-row"><button class="btn btn-primary" id="recordBuyBtn">记录本笔成交</button></div>' : selected===5 ? '<div class="field"><label for="returnInput">当前相对计划入场价涨幅（未扣费用）</label><div class="field-row"><input id="returnInput" type="number" placeholder="输入当前涨幅" step="0.1" /><span class="suffix">%</span></div></div><div class="action-row"><button class="btn btn-primary" id="createSellBtn">记录目标挂卖单</button><button class="btn" id="fillSellBtn">标记卖出成交</button></div>' : '';
       detailBody.innerHTML = '<div class="detail-title"><div class="detail-icon">'+n.icon+'</div><div><h3>0'+(selected+1)+' · '+n.title+'</h3><p>'+n.desc+'</p></div></div>' + n.rules.map((r,i)=>'<div class="rule"><div class="rule-top"><div class="rule-label">'+r[0]+'</div><select class="state '+r[2]+'" data-rule="'+i+'" aria-label="'+r[0]+' 状态"><option value="pending" '+(r[2]==='pending'?'selected':'')+'>待确认</option><option value="pass" '+(r[2]==='pass'?'selected':'')+'>通过</option><option value="block" '+(r[2]==='block'?'selected':'')+'>不通过</option></select></div><div class="rule-help">'+r[1]+'</div></div>').join('') + action;
-      detailBody.querySelectorAll('.state').forEach(s=>s.addEventListener('change', e=>{ e.target.className='state '+e.target.value; nodes[selected].rules[+e.target.dataset.rule][2]=e.target.value; updateNodeState(); saveState(); }));
-      document.getElementById('recordLowBtn')?.addEventListener('click',()=>{ appState.lowPoints+=1; addLog('确认一个新的低点','低位确认节点已记录，允许进入下一笔检查。'); toast('低点已记录，可进入分批打入'); });
-      document.getElementById('recordBuyBtn')?.addEventListener('click',()=>{ const amount=Number(document.getElementById('batchAmount').value); const rulesPass=nodes[selected].rules.every(rule=>rule[2]==='pass'); if(!rulesPass){ toast('叶子规则未全部通过，暂不生成成交记录'); return; } if(!Number.isFinite(amount)||amount<=0){ toast('请填写有效的本笔金额'); return; } const stock=appState.stocks[appState.selectedStock]; if(stock.batchCount>=stock.maxBatches){ toast('已达到分批次数上限'); return; } stock.batchCount+=1; addLog('分批成交已记录','第 '+stock.batchCount+' / '+stock.maxBatches+' 笔，金额 ¥'+amount.toLocaleString('zh-CN')+'。'); toast('本笔成交已记录'); renderDetail(); });
-      document.getElementById('createSellBtn')?.addEventListener('click',()=>{ const actual=Number(document.getElementById('returnInput').value); if(!Number.isFinite(actual)||actual<appState.target){ toast('当前收益未达到目标 '+appState.target+'%，暂不挂单'); return; } appState.stocks[appState.selectedStock].order='pending'; addLog('已生成挂卖单','实际收益 '+actual+'%，达到目标 '+appState.target+'%。'); toast('挂卖单已记录，等待成交'); renderDetail(); });
+      detailBody.querySelectorAll('.state').forEach(s=>s.addEventListener('change', e=>{
+        e.target.className='state '+e.target.value; nodes[selected].rules[+e.target.dataset.rule][2]=e.target.value;
+        if(selected<5&&e.target.value!=='pass') setStock({lowReady:false});
+        updateNodeState(); saveState();
+      }));
+      if ([0,2,3,4,5].includes(selected)) mountRiskEditor(detailBody, {
+        read:currentPlan, targetPercent:()=>appState.target, name:currentStockName(),
+        write:plan=>{ setStock({riskPlan:plan,lowReady:false}); saveState(); },
+        onChange:refreshFlowStates
+      });
+      document.getElementById('recordLowBtn')?.addEventListener('click', recordLow);
+      document.getElementById('recordBuyBtn')?.addEventListener('click', recordBuy);
+      document.getElementById('createSellBtn')?.addEventListener('click', recordSell);
       document.getElementById('fillSellBtn')?.addEventListener('click',()=>{ const stock=appState.stocks[appState.selectedStock]; if(stock.order!=='pending'){ toast('请先达到目标并生成挂卖单'); return; } stock.order='filled'; appState.reviewCount+=1; addLog('卖出成交已记录','本轮持仓完成退出，进入复盘。'); toast('卖出成交已记录'); renderDetail(); });
     }
-    function updateNodeState(){ const el=document.querySelector('.flow-node[data-node="'+selected+'"] .node-state'); const statuses=nodes[selected].rules.map(r=>r[2]); el.textContent=statuses.every(s=>s==='pass')?'已通过':statuses.some(s=>s==='block')?'不可执行':statuses.some(s=>s==='pass')?'部分通过':selected===5?'目标 '+appState.target+'%':'待确认'; el.className='node-state '+(el.textContent==='已通过'?'ok':''); }
+    function recordLow() {
+      if (planResult().status !== 'pass') return toast(planResult().reason);
+      if (!nodes[2].rules.every(r=>r[2]==='pass')) return toast('低位叶子规则未全部通过。');
+      if (currentStock().order !== 'none') return toast('已进入退出流程，暂停新增低点。');
+      if (currentStock().lowReady) return toast('当前低点已确认，请勿重复记录。');
+      setStock({lowReady:true}); appState={...appState,lowPoints:appState.lowPoints+1};
+      addLog('确认一个新的低点', currentStockName()+' · 计划盈亏比 '+planResult().ratio.toFixed(2)+':1');
+      toast('低点已记录，仅支持本候选下一笔买入。');
+    }
+    function recordBuy() {
+      const result=planResult(), stock=currentStock();
+      if (result.status !== 'pass') return toast(result.reason);
+      if (!nodes.slice(0,5).every(node=>node.rules.every(r=>r[2]==='pass'))) return toast('交易前提、龙头、低位、分批及持仓检查须全部通过。');
+      if (stock.order !== 'none') return toast('已进入退出流程，不能继续补仓。');
+      if (!stock.lowReady) return toast('请先为本候选重新确认一个低点。');
+      const amount=Number(document.getElementById('batchAmount').value);
+      if (!Number.isFinite(amount)||amount<=0) return toast('请填写有效的本笔金额');
+      if (stock.batchCount>=stock.maxBatches) return toast('已达到分批次数上限');
+      setStock({batchCount:stock.batchCount+1,lowReady:false});
+      addLog('分批成交已记录', currentStockName()+' · 第 '+currentStock().batchCount+' / '+stock.maxBatches+' 笔，金额 '+amount+' '+(currentPlan().market==='A'?'CNY':'HKD')+'；计划盈亏比 '+result.ratio.toFixed(2)+':1。');
+      toast('本笔成交已记录；下一笔须重新评估计划并确认低点。'); renderDetail();
+    }
+    function recordSell() {
+      const raw=document.getElementById('returnInput').value;
+      const entry=Number(currentPlan().entry), target=Number(currentPlan().target);
+      if (!Number.isFinite(entry)||!Number.isFinite(target)||entry<=0||target<=entry) return toast('请先填写有效的计划入场价与目标价。');
+      const threshold=(target-entry)/entry*100, actual=Number(raw);
+      if (!raw.trim()||!Number.isFinite(actual)||actual+1e-10<threshold) return toast('尚未达到已保存目标价对应的涨幅 '+threshold.toFixed(2)+'%。');
+      if (!currentStock().batchCount||currentStock().order!=='none') return toast('没有持仓，或本轮已有卖出记录。');
+      setStock({order:'pending',lowReady:false});
+      addLog('已记录目标挂卖单',currentStockName()+' · 目标价 '+target+'，相对计划入场价涨幅 '+threshold.toFixed(2)+'%。仅为手动记录，未向券商发送订单。');
+      toast('挂卖单已记录，等待实际成交。'); renderDetail();
+    }
+    function refreshFlowStates() {
+      const result=planResult();
+      nodes.forEach((node,index)=>{
+        const el=document.querySelector('[data-node="'+index+'"] .node-state');
+        const statuses=node.rules.map(r=>r[2]);
+        let label=statuses.every(s=>s==='pass')?'已通过':statuses.some(s=>s==='block')?'不可执行':statuses.some(s=>s==='pass')?'部分通过':'待确认';
+        if ([2,3].includes(index)&&result.status!=='pass') label=result.status==='block'?'盈亏比未达标':'盈亏比待设置';
+        el.textContent=label; el.className='node-state '+(label==='已通过'?'ok':'');
+      });
+    }
+    function updateNodeState(){ refreshFlowStates(); }
     document.querySelectorAll('.flow-node').forEach(el=>el.addEventListener('click',()=>{ selected=+el.dataset.node; document.querySelectorAll('.flow-node').forEach(x=>x.classList.toggle('selected',x===el)); renderDetail(); }));
     document.getElementById('nextBtn').addEventListener('click',()=>{ selected=(selected+1)%nodes.length; document.querySelector('.flow-node[data-node="'+selected+'"]').click(); });
     const normalizeTarget = raw => { const n=Number(raw); return Number.isFinite(n) ? Math.min(100, Math.max(.1, n)) : 10; };
     const appendCandidate = (name, id='candidate-'+Date.now()) => { const list=document.querySelector('.watch-list'); const row=document.createElement('div'); row.className='stock'; row.dataset.stock=id; row.tabIndex=0; row.setAttribute('role','button'); row.setAttribute('aria-label','选择'+name); const avatar=document.createElement('div'); avatar.className='stock-avatar'; avatar.textContent=name.slice(0,1); const info=document.createElement('div'); const title=document.createElement('div'); title.className='stock-name'; title.textContent=name; const meta=document.createElement('div'); meta.className='stock-meta'; meta.textContent='候选池 · 待开始'; info.append(title,meta); const price=document.createElement('div'); price.className='stock-price'; price.textContent='—'; const gain=document.createElement('span'); gain.className='gain'; gain.style.color='var(--amber)'; gain.textContent='观察中'; price.appendChild(gain); row.append(avatar,info,price); list.appendChild(row); bindStock(row); document.getElementById('candidateCount').textContent=document.querySelectorAll('.stock').length+' 个标的'; };
-    const bindStock = row => { const choose=()=>{ appState.selectedStock=row.dataset.stock; document.querySelectorAll('.stock').forEach(stock=>stock.classList.toggle('selected',stock===row)); saveState(); toast('已切换到 '+row.getAttribute('aria-label').replace('选择','')); }; row.addEventListener('click',choose); row.addEventListener('keydown',event=>{ if(event.key==='Enter'||event.key===' ') { event.preventDefault(); choose(); } }); };
+    const bindStock = row => {
+      const choose=()=>{
+        saveState(); appState={...appState,selectedStock:row.dataset.stock};
+        const statuses=currentStock().statuses||[];
+        nodes.forEach((node,ni)=>node.rules.forEach((rule,ri)=>{rule[2]=statuses[ni]?.[ri]||'pending';}));
+        document.querySelectorAll('.stock').forEach(stock=>{stock.classList.toggle('selected',stock===row);stock.classList.remove('active');});
+        saveState(); renderDetail(); refreshFlowStates(); toast('已切换到 '+row.getAttribute('aria-label').replace('选择',''));
+      };
+      row.addEventListener('click',choose);
+      row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();choose();}});
+    };
     document.querySelectorAll('.stock[data-stock]').forEach(bindStock);
     document.getElementById('saveBtn').addEventListener('click',()=>{ appState.target=normalizeTarget(document.getElementById('targetInput').value); document.getElementById('targetInput').value=appState.target; saveState(); toast('已保存：当前判断已写入本地路线 '+appState.versions[0].version); });
     document.getElementById('addStock').addEventListener('click',()=>{ const name=prompt('输入候选股票名称（仅用于本地记录）：')?.trim(); if(name){ const id='candidate-'+Date.now(); appState.stocks[id]={batchCount:0,maxBatches:4,order:'none'}; appendCandidate(name,id); let saved=[]; try { saved=JSON.parse(localStorage.getItem('stock-route-stocks')||'[]'); } catch(e) {} if(!Array.isArray(saved)) saved=[]; saved.push({id,name}); localStorage.setItem('stock-route-stocks',JSON.stringify(saved.slice(-20))); saveState(); } });
-    document.getElementById('targetInput').addEventListener('change', e=>{ appState.target=normalizeTarget(e.target.value); e.target.value=appState.target; document.querySelector('[data-node="5"] .node-state').textContent='目标 '+appState.target+'%'; saveState(); });
-    document.getElementById('createVersionBtn').addEventListener('click',()=>{ const note=document.getElementById('versionNote').value.trim(); if(!note){ toast('请填写版本变更说明'); return; } const current=appState.versions[0]?.version||'v0.1'; const minor=(Number(current.replace('v0.',''))||1)+1; const version='v0.'+minor; appState.versions.unshift({version,note,at:formatTime(new Date())}); document.getElementById('versionNote').value=''; saveState(); toast('已创建规则版本 '+version); });
+    document.getElementById('targetInput').addEventListener('change', e=>{ appState.target=normalizeTarget(e.target.value); e.target.value=appState.target; saveState(); renderDetail(); refreshFlowStates(); });
+    document.getElementById('createVersionBtn').addEventListener('click',()=>{ const note=document.getElementById('versionNote').value.trim(); if(!note){ toast('请填写版本变更说明'); return; } const current=appState.versions[0]?.version||'v0.1'; const minor=(Number(current.replace('v0.',''))||1)+1; const version='v0.'+minor; appState.versions.unshift({version,note,at:formatTime(new Date()),scope:'A 股 + 港股通',targetTemplate:appState.target,plans:structuredClone(Object.fromEntries(Object.entries(appState.stocks).map(([id,stock])=>[id,stock.riskPlan||{}])))}); document.getElementById('versionNote').value=''; saveState(); toast('已创建规则版本 '+version); });
     document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>{ const label=item.textContent.trim(); const target=label==='复盘迭代'?'#workflowRecords':label==='参数版本'?'#workflowRecords':label==='边界说明'?'#workflowRecords':null; if(target) document.querySelector(target).scrollIntoView({behavior:'smooth'}); }));
     renderDetail();
     restoreState();
+    document.querySelector('.target-line label').textContent='止盈模板（不覆盖已保存目标价）';
+    document.querySelectorAll('.stock').forEach(row=>{row.classList.remove('active');row.classList.toggle('selected',row.dataset.stock===appState.selectedStock);});
   </script>
 </body>
 </html>
