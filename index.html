@@ -106,6 +106,7 @@
     @media (max-width:1050px) { .app { grid-template-columns:70px minmax(0,1fr); } aside { padding:20px 10px; }.brand { padding:0 10px 30px; }.brand-copy,.nav-label,.nav-item span:not(.nav-icon),.version { display:none; }.nav-item { justify-content:center; padding:12px; }.layout { grid-template-columns:minmax(0,1fr); }.bottom, .workflow-grid { grid-template-columns:minmax(0,1fr); } }
     @media (max-width:720px) { main { padding:22px 16px 35px; }.topbar { display:block; }.top-actions { margin-top:15px; }.flow-wrap { overflow-x:auto; }.flow { min-width:930px; }.principle-body { grid-template-columns:repeat(2,1fr); }.bottom { gap:14px; } }
   </style>
+  <link rel="stylesheet" href="workspace.css" />
 </head>
 <body>
   <div class="app">
@@ -123,12 +124,13 @@
     </aside>
     <main>
       <div class="topbar">
-        <div><h1>交易路线总览</h1><p class="subtitle">A 股 + 港股通 · 盈亏比优先 · 选龙头 → 确认低位与盈亏比 → 分批打入 → 按计划退出。</p></div>
-        <div class="top-actions"><span class="badge"><i class="dot"></i>纪律模式已开启</span><button class="btn btn-primary" id="saveBtn">保存本次判断</button></div>
+        <div><div class="eyebrow">YOUR STRATEGY, YOUR DISCIPLINE</div><h1>让每一步，都有依据。</h1><p class="subtitle">选好股，等低点，分批投入。到达目标，按计划离场。</p></div>
+        <div class="top-actions"><span class="badge"><i class="dot"></i>本地自动保存</span><button class="btn btn-primary" id="saveBtn">保存本次判断</button></div>
       </div>
+      <div class="workspace-meta"><span>A 股 / 港股通</span><span>盈亏比优先</span><span id="activeCandidateLabel"></span><span id="planSummary"></span></div>
       <div class="layout">
-        <section class="panel">
-          <div class="panel-head"><h2>主路线 · v0.1</h2><span>点击节点查看叶子规则</span></div>
+        <section class="panel route-panel">
+          <div class="panel-head"><div><h2>主路线 · v0.1</h2><span>先看全局，再展开每一步</span></div><div class="canvas-toolbar"><button class="btn" id="expandBoundaries" aria-pressed="false">展开全部边界</button></div></div>
           <div class="flow-wrap">
             <div class="flow" id="flow">
               <button type="button" class="flow-node selected" data-node="0" aria-label="选择节点：交易前提"><div class="node-num">01</div><div class="node-icon">◒</div><div class="node-title">交易前提</div><div class="node-state">待确认</div></button>
@@ -143,22 +145,24 @@
               <div class="connector"></div>
               <button type="button" class="flow-node" data-node="5" aria-label="选择节点：目标卖出"><div class="node-num">06</div><div class="node-icon">↗</div><div class="node-title">目标卖出</div><div class="node-state">目标 10%</div></button>
             </div>
-            <div class="branch-row"><div class="branch good"><strong>✓ 通过</strong><span>进入下一节点，保留证据和规则版本。</span></div><div class="branch warn"><strong>◌ 待确认</strong><span>继续观察，不生成买入动作。</span></div><div class="branch bad"><strong>× 失效</strong><span>退出优先，记录偏差后复盘。</span></div></div>
-            <div class="flow-note"><b>循环规则</b><span>每笔先评估盈亏比，再确认新低点；止盈或逻辑失效则退出。持仓时长用于复盘，不预设固定期限。</span></div>
           </div>
+          <div class="sequence-viewport" aria-label="可滚动的交易时序图"><div id="sequenceDiagram" aria-live="polite">正在铺开你的交易路线…</div></div>
+          <div class="sequence-footer"><span>点击节点或编号条件，即可编辑</span><div class="sequence-toolbar"><button class="btn" id="zoomOut" aria-label="缩小路线图">−</button><output id="zoomLabel">100%</output><button class="btn" id="zoomIn" aria-label="放大路线图">＋</button><button class="btn" id="zoomFit">适应画布</button></div></div>
         </section>
-        <section class="panel detail"><div class="panel-head"><h2>节点检查</h2><span id="ruleCount">2 条叶子规则</span></div><div class="detail-body" id="detailBody"></div><div class="detail-foot"><span class="saved">状态变更自动记录到 <b>路线 v0.1</b></span><button class="btn" id="nextBtn">下一节点 →</button></div></section>
+        <section class="panel detail" aria-label="节点编辑面板"><div class="panel-head"><h2>节点与边界</h2><span id="ruleCount">2 条边界条件</span><button class="btn detail-close" id="closeDetail" aria-label="关闭节点面板">关闭</button></div><div class="detail-body" id="detailBody"></div><div class="detail-foot"><span class="saved">判断自动保存 · <b>仅当前浏览器</b></span><button class="btn" id="nextBtn">下一节点 →</button></div></section>
         <section class="panel watch"><div class="panel-head"><h2>执行中的候选</h2><span id="candidateCount">3 个标的</span></div><div class="watch-body"><div class="watch-list"><div class="stock active selected" data-stock="star" tabindex="0" role="button" aria-label="选择星河材料"><div class="stock-avatar">星</div><div><div class="stock-name">星河材料 <span style="color:#6d8da4;font-weight:400">0028**</span></div><div class="stock-meta">第 2 / 4 笔 · 低点已确认</div></div><div class="stock-price">¥24.80<span class="gain">+6.4%</span></div><div class="stock-progress"><i style="width:64%"></i></div></div><div class="stock" data-stock="far" tabindex="0" role="button" aria-label="选择远峰科技"><div class="stock-avatar">远</div><div><div class="stock-name">远峰科技 <span style="color:#6d8da4;font-weight:400">3007**</span></div><div class="stock-meta">候选池 · 等待低位</div></div><div class="stock-price">—<span class="gain" style="color:var(--amber)">观察中</span></div></div><div class="stock" data-stock="energy" tabindex="0" role="button" aria-label="选择安澜能源"><div class="stock-avatar">安</div><div><div class="stock-name">安澜能源 <span style="color:#6d8da4;font-weight:400">6011**</span></div><div class="stock-meta">已挂卖单 · 等待成交</div></div><div class="stock-price">¥18.32<span class="gain">+10.1%</span></div></div></div><button class="add-stock" id="addStock">＋ 添加候选股票</button></div></section>
       </div>
       <div class="bottom"><section class="panel"><div class="panel-head"><h2>四条纪律</h2><span>原始路线</span></div><div class="principle-body"><div class="principle"><div class="p-num">01 / SELECT</div><strong>买龙头</strong><p>先定义比较范围和证据，再确认相对强度与持续性。</p></div><div class="principle"><div class="p-num">02 / LOCATE</div><strong>买低位</strong><p>低位必须有口径：区间、回撤或企稳，不能只因为“跌了很多”。</p></div><div class="principle"><div class="p-num">03 / SCALE</div><strong>有钱补仓</strong><p>现金只是能力；逻辑有效、低点确认、风险预算充足才可补。</p></div><div class="principle"><div class="p-num">04 / EXIT</div><strong>不贪心，挂单卖</strong><p>达到目标盈利就生成卖单；挂单未成交，仓位仍在管理中。</p></div></div></section><section class="panel"><div class="panel-head"><h2>路线参数</h2><span>可迭代</span></div><div class="metric-body"><div class="metrics"><div class="metric"><label>本轮候选</label><strong id="candidateMetric">03</strong><small>1 个执行中</small></div><div class="metric"><label>已确认低点</label><strong id="lowPointMetric">04</strong><small>均有记录</small></div><div class="metric"><label>待复盘交易</label><strong id="reviewMetric">02</strong><small>成交后更新</small></div></div><div class="target-line"><label>目标盈利率 <span style="color:#648298">（初始值）</span></label><div><input id="targetInput" value="10" type="number" min="0.1" max="100" step="0.5" aria-label="目标盈利率" /><span style="color:var(--cyan);margin-left:5px">%</span></div></div></div></section></div>
       <div class="workflow-grid" id="workflowRecords"><section class="panel"><div class="panel-head"><h2>执行记录</h2><span>本地可持久化</span></div><div class="log-body"><div class="log-list" id="executionLog"><div class="empty">还没有执行记录。先在流程节点中确认一个低点。</div></div></div></section><section class="panel"><div class="panel-head"><h2>规则版本</h2><span id="currentVersion">当前 v0.1</span></div><div class="version-body"><div class="version-list" id="versionList"><div class="version-item"><strong>v0.1 · 初始框架</strong><time>基础路线已建立</time></div></div><div class="version-form"><label for="versionNote">创建下一版本的变更说明</label><textarea id="versionNote" placeholder="例如：将低位定义为回撤后企稳，并限制最多 4 笔"></textarea><button class="btn btn-primary" id="createVersionBtn">创建新规则版本</button></div></div></section></div>
     </main>
   </div>
-  <div class="toast" id="toast">已保存：当前判断已写入路线 v0.1</div>
+  <button id="detailBackdrop" class="overlay" aria-label="关闭节点面板" hidden></button>
+  <div class="toast" id="toast" role="status">已保存：当前判断已写入路线 v0.1</div>
   <script src="risk-plan.js"></script>
   <script src="risk-editor.js"></script>
+  <script src="route-diagram.js"></script>
   <script>
-    const nodes = [
+    let nodes = [
       {icon:'◒', title:'交易前提', desc:'适用 A 股与港股通。先确认市场边界和风险预算；持仓期限由逻辑、目标及失效条件决定。', rules:[['市场边界已核验','A 股核验可卖日与涨跌停；港股通核验可买资格、交易日、每手及结算汇率。','pending'],['风险预算已锁定','可用现金、计划投入、保留现金和最大可接受损失均有记录。','pending']]},
       {icon:'✦', title:'选好股 / 找龙头', desc:'“龙头”是比较结果，不是自我感觉。每次判断都绑定范围、日期和证据。', rules:[['比较范围已定义','已写明行业、板块或候选池，以及比较日期。','pending'],['强度与逻辑仍有效','相对强度、成交与基本逻辑没有触发失效。','pending'],['龙头地位仍成立','若地位变化，回到持仓管理重新评估。','pending']]},
       {icon:'⌁', title:'低位确认 / 盈亏比', desc:'先写入场、失效、目标和费用，再看盈亏比是否达标；确认一个新低点才能进入下一笔。', rules:[['低位口径已选择','区间低 / 回撤低 / 企稳低，至少选择一种口径。','pending'],['低点有证据','记录价格、日期、观察周期和确认依据。','pending'],['止跌条件已核验','持续下跌时保持观察，不自动摊平。','pending']]},
@@ -175,6 +179,7 @@
     const currentStock = () => appState.stocks[appState.selectedStock];
     const currentPlan = () => currentStock()?.riskPlan || {};
     const planResult = () => RiskPlan.evaluatePlan(currentPlan());
+    const routeDefinitions = () => nodes.map(node=>({title:node.title,desc:node.desc,rules:node.rules.map(rule=>rule.slice(0,2))}));
     function setStock(delta) {
       appState = {...appState, stocks:{...appState.stocks, [appState.selectedStock]:{...currentStock(), ...delta}}};
     }
@@ -187,10 +192,10 @@
     function saveState(){
       appState={...appState,statuses:nodes.map(n=>n.rules.map(r=>r[2]))};
       setStock({statuses:appState.statuses});
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(appState)); renderLogs(); renderVersions(); updateMetrics();
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(appState)); renderLogs(); renderVersions(); updateMetrics(); window.RouteWorkspace?.refresh();
     }
     function addLog(message, detail=''){
-      const entry={message,detail,at:new Date().toISOString(),stockId:appState.selectedStock,riskPlan:structuredClone(currentPlan()),version:appState.versions[0].version};
+      const entry={message,detail,at:new Date().toISOString(),stockId:appState.selectedStock,riskPlan:structuredClone(currentPlan()),definitions:structuredClone(routeDefinitions()),version:appState.versions[0].version};
       appState={...appState,logs:[entry,...appState.logs]}; saveState();
     }
     function renderLogs(){ const log=document.getElementById('executionLog'); if(!appState.logs.length){ log.innerHTML='<div class="empty">还没有执行记录。先在流程节点中确认一个低点。</div>'; return; } log.innerHTML=appState.logs.slice(0,30).map(item=>'<div class="log-item"><strong>'+escapeText(item.message)+'</strong>'+(item.detail?'<div>'+escapeText(item.detail)+'</div>':'')+'<time>'+escapeText(formatTime(item.at))+'</time></div>').join(''); }
@@ -199,11 +204,11 @@
     function restoreState(){ try { const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved) appState=Object.assign(cloneDefault(), saved, {stocks:Object.assign(cloneDefault().stocks,saved.stocks||{}),versions:Array.isArray(saved.versions)&&saved.versions.length?saved.versions:cloneDefault().versions,logs:Array.isArray(saved.logs)?saved.logs:[]}); if(Array.isArray(appState.statuses)) appState.statuses.forEach((statuses,ni)=>{ if(nodes[ni]&&Array.isArray(statuses)) statuses.forEach((status,ri)=>{ if(nodes[ni].rules[ri]&&['pending','pass','block'].includes(status)) nodes[ni].rules[ri][2]=status; }); }); let savedStocks=[]; try { savedStocks=JSON.parse(localStorage.getItem('stock-route-stocks')||'[]'); } catch(e) {} if(Array.isArray(savedStocks)) savedStocks.forEach(item=>{ const name=typeof item==='string'?item:item?.name; const id=typeof item==='string'?'candidate-'+name.replace(/[^a-z0-9]/gi,'').slice(0,12):item?.id; if(name&&id&&!document.querySelector('[data-stock="'+CSS.escape(id)+'"]')) { if(!appState.stocks[id]) appState.stocks[id]={batchCount:0,maxBatches:4,order:'none'}; appendCandidate(name,id); } }); } catch(e){ appState=cloneDefault(); localStorage.removeItem(STORAGE_KEY); } document.getElementById('targetInput').value=normalizeTarget(appState.target); document.querySelector('[data-node="5"] .node-state').textContent='目标 '+normalizeTarget(appState.target)+'%'; nodes.forEach((_,ni)=>{ const el=document.querySelector('.flow-node[data-node="'+ni+'"] .node-state'); const statuses=nodes[ni].rules.map(r=>r[2]); el.textContent=statuses.every(s=>s==='pass')?'已通过':statuses.some(s=>s==='block')?'不可执行':statuses.some(s=>s==='pass')?'部分通过':ni===5?'目标 '+appState.target+'%':'待确认'; el.className='node-state '+(el.textContent==='已通过'?'ok':''); }); const selectedStock=document.querySelector('[data-stock="'+CSS.escape(appState.selectedStock)+'"]'); if(selectedStock) selectedStock.classList.add('selected'); renderLogs(); renderVersions(); updateMetrics(); document.getElementById('candidateCount').textContent=document.querySelectorAll('.stock').length+' 个标的'; renderDetail(); }
     function renderDetail() {
       const n = nodes[selected];
-      document.getElementById('ruleCount').textContent = n.rules.length + ' 条叶子规则';
+      document.getElementById('ruleCount').textContent = n.rules.length + ' 条边界条件';
       const action = selected===2 ? '<div class="action-row"><button class="btn btn-primary" id="recordLowBtn">记录已确认低点</button></div>' : selected===3 ? '<div class="field"><label for="batchAmount">本笔计划金额（报价币种）</label><div class="field-row"><input id="batchAmount" type="number" min="1" placeholder="输入金额" /></div></div><div class="action-row"><button class="btn btn-primary" id="recordBuyBtn">记录本笔成交</button></div>' : selected===5 ? '<div class="field"><label for="returnInput">当前相对计划入场价涨幅（未扣费用）</label><div class="field-row"><input id="returnInput" type="number" placeholder="输入当前涨幅" step="0.1" /><span class="suffix">%</span></div></div><div class="action-row"><button class="btn btn-primary" id="createSellBtn">记录目标挂卖单</button><button class="btn" id="fillSellBtn">标记卖出成交</button></div>' : '';
-      detailBody.innerHTML = '<div class="detail-title"><div class="detail-icon">'+n.icon+'</div><div><h3>0'+(selected+1)+' · '+n.title+'</h3><p>'+n.desc+'</p></div></div>' + n.rules.map((r,i)=>'<div class="rule"><div class="rule-top"><div class="rule-label">'+r[0]+'</div><select class="state '+r[2]+'" data-rule="'+i+'" aria-label="'+r[0]+' 状态"><option value="pending" '+(r[2]==='pending'?'selected':'')+'>待确认</option><option value="pass" '+(r[2]==='pass'?'selected':'')+'>通过</option><option value="block" '+(r[2]==='block'?'selected':'')+'>不通过</option></select></div><div class="rule-help">'+r[1]+'</div></div>').join('') + action;
+      detailBody.innerHTML = '<div class="detail-title"><div class="detail-icon">0'+(selected+1)+'</div><div><h3>0'+(selected+1)+' · '+escapeText(n.title)+'</h3><p>'+escapeText(n.desc)+'</p></div></div>' + n.rules.map((r,i)=>'<div class="rule" data-leaf="'+i+'"><div class="rule-top"><div class="rule-label">'+escapeText(r[0])+'</div><select class="state '+r[2]+'" data-rule="'+i+'" aria-label="'+escapeText(r[0])+' 状态"><option value="pending" '+(r[2]==='pending'?'selected':'')+'>待确认</option><option value="pass" '+(r[2]==='pass'?'selected':'')+'>通过</option><option value="block" '+(r[2]==='block'?'selected':'')+'>不通过</option></select></div><div class="rule-help">'+escapeText(r[1])+'</div></div>').join('') + action;
       detailBody.querySelectorAll('.state').forEach(s=>s.addEventListener('change', e=>{
-        e.target.className='state '+e.target.value; nodes[selected].rules[+e.target.dataset.rule][2]=e.target.value;
+        e.target.className='state '+e.target.value; nodes=nodes.map((node,ni)=>ni===selected?{...node,rules:node.rules.map((rule,ri)=>ri===+e.target.dataset.rule?[rule[0],rule[1],e.target.value]:rule)}:node);
         if(selected<5&&e.target.value!=='pass') setStock({lowReady:false});
         updateNodeState(); saveState();
       }));
@@ -216,6 +221,7 @@
       document.getElementById('recordBuyBtn')?.addEventListener('click', recordBuy);
       document.getElementById('createSellBtn')?.addEventListener('click', recordSell);
       document.getElementById('fillSellBtn')?.addEventListener('click',()=>{ const stock=appState.stocks[appState.selectedStock]; if(stock.order!=='pending'){ toast('请先达到目标并生成挂卖单'); return; } stock.order='filled'; appState.reviewCount+=1; addLog('卖出成交已记录','本轮持仓完成退出，进入复盘。'); toast('卖出成交已记录'); renderDetail(); });
+      window.RouteWorkspace?.mountEditor();
     }
     function recordLow() {
       if (planResult().status !== 'pass') return toast(planResult().reason);
@@ -259,9 +265,10 @@
         if ([2,3].includes(index)&&result.status!=='pass') label=result.status==='block'?'盈亏比未达标':'盈亏比待设置';
         el.textContent=label; el.className='node-state '+(label==='已通过'?'ok':'');
       });
+      window.RouteWorkspace?.refresh();
     }
     function updateNodeState(){ refreshFlowStates(); }
-    document.querySelectorAll('.flow-node').forEach(el=>el.addEventListener('click',()=>{ selected=+el.dataset.node; document.querySelectorAll('.flow-node').forEach(x=>x.classList.toggle('selected',x===el)); renderDetail(); }));
+    document.querySelectorAll('.flow-node').forEach(el=>el.addEventListener('click',()=>{ if(window.RouteWorkspace) return window.RouteWorkspace.select(+el.dataset.node,undefined,el); selected=+el.dataset.node; document.querySelectorAll('.flow-node').forEach(x=>x.classList.toggle('selected',x===el)); renderDetail(); }));
     document.getElementById('nextBtn').addEventListener('click',()=>{ selected=(selected+1)%nodes.length; document.querySelector('.flow-node[data-node="'+selected+'"]').click(); });
     const normalizeTarget = raw => { const n=Number(raw); return Number.isFinite(n) ? Math.min(100, Math.max(.1, n)) : 10; };
     const appendCandidate = (name, id='candidate-'+Date.now()) => { const list=document.querySelector('.watch-list'); const row=document.createElement('div'); row.className='stock'; row.dataset.stock=id; row.tabIndex=0; row.setAttribute('role','button'); row.setAttribute('aria-label','选择'+name); const avatar=document.createElement('div'); avatar.className='stock-avatar'; avatar.textContent=name.slice(0,1); const info=document.createElement('div'); const title=document.createElement('div'); title.className='stock-name'; title.textContent=name; const meta=document.createElement('div'); meta.className='stock-meta'; meta.textContent='候选池 · 待开始'; info.append(title,meta); const price=document.createElement('div'); price.className='stock-price'; price.textContent='—'; const gain=document.createElement('span'); gain.className='gain'; gain.style.color='var(--amber)'; gain.textContent='观察中'; price.appendChild(gain); row.append(avatar,info,price); list.appendChild(row); bindStock(row); document.getElementById('candidateCount').textContent=document.querySelectorAll('.stock').length+' 个标的'; };
@@ -280,12 +287,13 @@
     document.getElementById('saveBtn').addEventListener('click',()=>{ appState.target=normalizeTarget(document.getElementById('targetInput').value); document.getElementById('targetInput').value=appState.target; saveState(); toast('已保存：当前判断已写入本地路线 '+appState.versions[0].version); });
     document.getElementById('addStock').addEventListener('click',()=>{ const name=prompt('输入候选股票名称（仅用于本地记录）：')?.trim(); if(name){ const id='candidate-'+Date.now(); appState.stocks[id]={batchCount:0,maxBatches:4,order:'none'}; appendCandidate(name,id); let saved=[]; try { saved=JSON.parse(localStorage.getItem('stock-route-stocks')||'[]'); } catch(e) {} if(!Array.isArray(saved)) saved=[]; saved.push({id,name}); localStorage.setItem('stock-route-stocks',JSON.stringify(saved.slice(-20))); saveState(); } });
     document.getElementById('targetInput').addEventListener('change', e=>{ appState.target=normalizeTarget(e.target.value); e.target.value=appState.target; saveState(); renderDetail(); refreshFlowStates(); });
-    document.getElementById('createVersionBtn').addEventListener('click',()=>{ const note=document.getElementById('versionNote').value.trim(); if(!note){ toast('请填写版本变更说明'); return; } const current=appState.versions[0]?.version||'v0.1'; const minor=(Number(current.replace('v0.',''))||1)+1; const version='v0.'+minor; appState.versions.unshift({version,note,at:formatTime(new Date()),scope:'A 股 + 港股通',targetTemplate:appState.target,plans:structuredClone(Object.fromEntries(Object.entries(appState.stocks).map(([id,stock])=>[id,stock.riskPlan||{}])))}); document.getElementById('versionNote').value=''; saveState(); toast('已创建规则版本 '+version); });
-    document.querySelectorAll('.nav-item').forEach(item=>item.addEventListener('click',()=>{ const label=item.textContent.trim(); const target=label==='复盘迭代'?'#workflowRecords':label==='参数版本'?'#workflowRecords':label==='边界说明'?'#workflowRecords':null; if(target) document.querySelector(target).scrollIntoView({behavior:'smooth'}); }));
+    document.getElementById('createVersionBtn').addEventListener('click',()=>{ const note=document.getElementById('versionNote').value.trim(); if(!note){ toast('请填写版本变更说明'); return; } const current=appState.versions[0]?.version||'v0.1'; const minor=(Number(current.replace('v0.',''))||1)+1; const version='v0.'+minor; const snapshot={version,note,at:formatTime(new Date()),scope:'A 股 + 港股通',targetTemplate:appState.target,definitions:structuredClone(routeDefinitions()),plans:structuredClone(Object.fromEntries(Object.entries(appState.stocks).map(([id,stock])=>[id,stock.riskPlan||{}])))}; appState={...appState,versions:[snapshot,...appState.versions]}; document.getElementById('versionNote').value=''; saveState(); toast('已创建规则版本 '+version); });
     renderDetail();
     restoreState();
     document.querySelector('.target-line label').textContent='止盈模板（不覆盖已保存目标价）';
     document.querySelectorAll('.stock').forEach(row=>{row.classList.remove('active');row.classList.toggle('selected',row.dataset.stock===appState.selectedStock);});
   </script>
+  <script src="workspace.js"></script>
+  <script type="module" src="assets/sequence-view.js"></script>
 </body>
 </html>

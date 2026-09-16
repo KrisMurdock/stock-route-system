@@ -3,8 +3,15 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "test": "node --test --experimental-test-coverage --test-coverage-include=risk-plan.js tests/risk-plan.test.cjs",
-    "test:e2e": "node tests/e2e.mjs && node tests/risk-plan.e2e.cjs"
+    "build": "esbuild sequence-view.js --bundle --minify-identifiers --minify-syntax --format=esm --splitting --target=es2020 --outdir=assets --legal-comments=linked",
+    "test": "node --test --experimental-test-coverage --test-coverage-include=risk-plan.js --test-coverage-include=route-diagram.js tests/risk-plan.test.cjs tests/route-diagram.test.cjs",
+    "test:e2e": "node tests/e2e.mjs && node tests/risk-plan.e2e.cjs && node tests/route-workspace.e2e.cjs"
   },
-  "devDependencies": { "playwright": "1.63.0" }
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.63.0"
+  },
+  "dependencies": {
+    "mermaid": "11.17.2"
+  }
 }
